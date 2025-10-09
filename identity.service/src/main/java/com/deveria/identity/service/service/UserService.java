@@ -14,8 +14,14 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    // Tạo mới người dùng
     public User createUser(UserCreateRequest request) {
         User user = new User();
+
+        if(userRepository.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Username already exists");
+        }
+
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());
         user.setFirstName(request.getFirstName());
@@ -25,16 +31,25 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public List<User> getUsers(){
+    // Lấy danh sách tất cả người dùng
+    public List<User> getUsers() {
         return userRepository.findAll();
     }
 
-    public User getUser(String userId){
-        return userRepository.findById(userId);
+    // Lấy thông tin người dùng theo ID
+    public User getUser(String userId) {
+        // findById() trả về Optional<User>
+        // → orElseThrow() dùng để "mở" Optional, trả về đối tượng User nếu có,
+        // hoặc ném ra RuntimeException nếu không tìm thấy người dùng.
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    public User updateUser(String userId, UserUpdateRequest request){
-        User user = userRepository.findById(userId);
+    // Cập nhật thông tin người dùng
+    public User updateUser(String userId, UserUpdateRequest request) {
+        // orElseThrow() giúp tránh NullPointerException khi không tìm thấy User
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());
@@ -45,8 +60,11 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public void deleteUser(String userId){
-        User user = userRepository.findById(userId);
+    // Xóa người dùng
+    public void deleteUser(String userId) {
+        // Nếu không có user tương ứng, orElseThrow() sẽ ném lỗi ngay lập tức
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         userRepository.delete(user);
     }
 
