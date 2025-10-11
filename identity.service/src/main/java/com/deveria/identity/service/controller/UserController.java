@@ -1,5 +1,6 @@
 package com.deveria.identity.service.controller;
 
+import com.deveria.identity.service.dto.request.ApiResponse;
 import com.deveria.identity.service.dto.request.UserCreateRequest;
 import com.deveria.identity.service.dto.request.UserUpdateRequest;
 import com.deveria.identity.service.entity.User;
@@ -18,8 +19,12 @@ public class UserController {
     private UserService userService;
 
     @PostMapping()
-    User createUser(@RequestBody @Valid UserCreateRequest request) {
-        return userService.createUser(request);
+    ApiResponse<User> createUser(@RequestBody @Valid UserCreateRequest request) {
+        ApiResponse<User> response = new ApiResponse<>();
+
+        response.setResult(userService.createUser(request));
+
+        return response;
     }
 
     @GetMapping()
