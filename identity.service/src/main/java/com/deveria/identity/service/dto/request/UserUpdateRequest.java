@@ -1,53 +1,31 @@
 package com.deveria.identity.service.dto.request;
 
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 import java.time.LocalDate;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserUpdateRequest {
-    private String username;
-    private String password;
-    private String firstName;
-    private String lastName;
-    private LocalDate dob;
+    String username;
+    String password;
+    String firstName;
+    String lastName;
+    LocalDate dob;
 
-    // Getters and Setters
+    // @Data generates getters, setters, toString, equals, and hashCode methods
+    // No need to manually write them
+    // If you need custom logic, you can still define them manually
 
-    public String getUsername() {
-        return username;
-    }
+    // @Builder provides a builder pattern for easy object creation. It can be used as follows:
+    // UserUpdateRequest request = UserUpdateRequest.builder().username("user1").password("pass123").build();
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    // @NoArgsConstructor generates a no-argument constructor
+    // @AllArgsConstructor generates a constructor with all fields as parameters
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public LocalDate getDob() {
-        return dob;
-    }
-
-    public void setDob(LocalDate dob) {
-        this.dob = dob;
-    }
+    // @FieldDefaults(level = AccessLevel.PRIVATE) makes all fields private by default
 }

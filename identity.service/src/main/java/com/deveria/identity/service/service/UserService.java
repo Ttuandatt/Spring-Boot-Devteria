@@ -2,9 +2,11 @@ package com.deveria.identity.service.service;
 
 import com.deveria.identity.service.dto.request.UserCreateRequest;
 import com.deveria.identity.service.dto.request.UserUpdateRequest;
+import com.deveria.identity.service.dto.response.UserResponse;
 import com.deveria.identity.service.entity.User;
 import com.deveria.identity.service.exception.AppException;
 import com.deveria.identity.service.exception.ErrorCode;
+import com.deveria.identity.service.mapper.UserMapper;
 import com.deveria.identity.service.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,19 +17,18 @@ import java.util.List;
 public class UserService {
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private UserMapper userMapper;
 
     // Tạo mới người dùng
     public User createUser(UserCreateRequest request) {
-        User user = new User();
-
         if(userRepository.existsByUsername(request.getUsername()))
             throw new RuntimeException("ErrorCode.USER_EXIST");
 
-        user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setDob(request.getDob());
+        // Thay vì tự tạo đối tượng User và gán từng trường một,
+        // ta sử dụng UserMapper để chuyển đổi từ UserCreateRequest sang User.
+        User user = userMapper.toUser(request);
+
 
         return userRepository.save(user);
     }
@@ -38,27 +39,24 @@ public class UserService {
     }
 
     // Lấy thông tin người dùng theo ID
-    public User getUser(String userId) {
+    public UserResponse getUser(String userId) {
         // findById() trả về Optional<User>
         // → orElseThrow() dùng để "mở" Optional, trả về đối tượng User nếu có,
         // hoặc ném ra RuntimeException nếu không tìm thấy người dùng.
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        return userMapper.toUserResponse(userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found")));
     }
 
     // Cập nhật thông tin người dùng
-    public User updateUser(String userId, UserUpdateRequest request) {
+    public UserResponse updateUser(String userId, UserUpdateRequest request) {
         // orElseThrow() giúp tránh NullPointerException khi không tìm thấy User
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setDob(request.getDob());
+        // Sử dụng UserMapper để cập nhật thông tin người dùng từ UserUpdateRequest
+        userMapper.updateUser(user, request);
 
-        return userRepository.save(user);
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     // Xóa người dùng
