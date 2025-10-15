@@ -1,31 +1,31 @@
 package com.deveria.identity.service.controller;
 
-import com.deveria.identity.service.dto.request.ApiResponse;
+import com.deveria.identity.service.dto.response.ApiResponse;
 import com.deveria.identity.service.dto.request.UserCreateRequest;
 import com.deveria.identity.service.dto.request.UserUpdateRequest;
 import com.deveria.identity.service.dto.response.UserResponse;
 import com.deveria.identity.service.entity.User;
 import com.deveria.identity.service.service.UserService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController()
 @RequestMapping("/users")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserController {
-
-    @Autowired
-    private UserService userService;
+    UserService userService;
 
     @PostMapping()
-    ApiResponse<User> createUser(@RequestBody @Valid UserCreateRequest request) {
-        ApiResponse<User> response = new ApiResponse<>();
-
-        response.setResult(userService.createUser(request));
-
-        return response;
+    ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreateRequest request) {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.createUser(request))
+                .build();
     }
 
     @GetMapping()

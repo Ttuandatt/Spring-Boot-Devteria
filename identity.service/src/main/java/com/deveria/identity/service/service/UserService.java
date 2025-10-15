@@ -8,29 +8,35 @@ import com.deveria.identity.service.exception.AppException;
 import com.deveria.identity.service.exception.ErrorCode;
 import com.deveria.identity.service.mapper.UserMapper;
 import com.deveria.identity.service.repository.UserRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private UserMapper userMapper;
+    UserRepository userRepository;
+    UserMapper userMapper;
 
     // Tạo mới người dùng
-    public User createUser(UserCreateRequest request) {
+    public UserResponse createUser(UserCreateRequest request) {
         if(userRepository.existsByUsername(request.getUsername()))
-            throw new RuntimeException("ErrorCode.USER_EXIST");
+            throw new AppException(ErrorCode.USER_EXIST);
 
         // Thay vì tự tạo đối tượng User và gán từng trường một,
         // ta sử dụng UserMapper để chuyển đổi từ UserCreateRequest sang User.
         User user = userMapper.toUser(request);
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-
-        return userRepository.save(user);
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     // Lấy danh sách tất cả người dùng
