@@ -17,6 +17,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,8 @@ public class AuthenticationService {
     UserRepository userRepository;
 
     @NonFinal   // because it's not injected via constructor
-    protected static final String SIGNER_KEY = "OJocZxJn4BPde8QpGGl5yovimPgSVR3Bx58GzLYkhBxpIYxr";
+    @Value("${jwt.signer.key}")
+    protected String SIGNER_KEY;
 
     public AuthenticationResponse authenticate(AuthenticationRequest request){
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
@@ -80,12 +82,15 @@ public class AuthenticationService {
 
         // Ký JWSObject với khóa bí mật
         try {
+            System.out.println("Key length (bytes): " + SIGNER_KEY.getBytes().length);
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
             return jwsObject.serialize();
         }catch (JOSEException e){
-            throw new RuntimeException(e);
+            throw new RuntimeException("Can not generate token",e);
         }
     }
+
+
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();

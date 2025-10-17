@@ -84,11 +84,19 @@
 			<artifactId>spring-security-crypto</artifactId>
 		</dependency>
 
-		<!-- Nimbusds Dependency: Dùng cho việc tạo JWT Token -->
+		<!--
+		Nimbusds Dependency: Dùng cho việc tạo JWT Token
 		<dependency>
 			<groupId>com.nimbusds</groupId>
 			<artifactId>nimbus-jose-jwt</artifactId>
 			<version>10.5</version>
+		</dependency>
+		-->
+
+		<!-- Spring Security OAuth2 Resource Server Dependency: included Nimbusds so we don't need the dependency above -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
 	</dependencies>
 

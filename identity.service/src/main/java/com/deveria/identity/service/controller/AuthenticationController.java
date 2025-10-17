@@ -23,12 +23,19 @@ import java.text.ParseException;
 public class AuthenticationController {
     AuthenticationService authenticationService;
 
-    @PostMapping("/login")
+    @PostMapping("/token")
+//    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request){
+//        // Gọi service để xác thực người dùng
+//        var result = authenticationService.authenticate(request);
+//
+//        // Trả về kết quả trong ApiResponse
+//        return ApiResponse.<AuthenticationResponse>builder()
+//                .result(result)
+//                .build();
+//    }
     ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request){
-        // Gọi service để xác thực người dùng
         var result = authenticationService.authenticate(request);
 
-        // Trả về kết quả trong ApiResponse
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(result)
                 .build();
