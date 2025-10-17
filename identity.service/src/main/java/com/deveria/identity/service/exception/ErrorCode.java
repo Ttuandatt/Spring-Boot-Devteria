@@ -5,7 +5,7 @@ public enum ErrorCode {
     INVALID_KEY(1001, "Invalid key"),   // Thêm mã lỗi cho khóa không hợp lệ
     USER_EXIST(1002, "User already exists"),
     INVALID_USERNAME(1003, "Username must be between 3 and 20 characters"),
-    INVALID_PASSWORD(1004, "Password must be at least 6 characters long"),
+    INVALID_PASSWORD(1004, "Password must be at least 5 characters long"),
     USER_NOT_EXIST(1005, "User not exists"),
     UNAUTHENTICATED(1006, "Unauthenticated")
     ;

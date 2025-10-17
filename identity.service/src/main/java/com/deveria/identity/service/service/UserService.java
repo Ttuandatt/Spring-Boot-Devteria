@@ -4,6 +4,7 @@ import com.deveria.identity.service.dto.request.UserCreateRequest;
 import com.deveria.identity.service.dto.request.UserUpdateRequest;
 import com.deveria.identity.service.dto.response.UserResponse;
 import com.deveria.identity.service.entity.User;
+import com.deveria.identity.service.enums.Role;
 import com.deveria.identity.service.exception.AppException;
 import com.deveria.identity.service.exception.ErrorCode;
 import com.deveria.identity.service.mapper.UserMapper;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -24,6 +26,7 @@ import java.util.List;
 public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
+    PasswordEncoder passwordEncoder;
 
     // Tạo mới người dùng
     public UserResponse createUser(UserCreateRequest request) {
@@ -33,8 +36,12 @@ public class UserService {
         // Thay vì tự tạo đối tượng User và gán từng trường một,
         // ta sử dụng UserMapper để chuyển đổi từ UserCreateRequest sang User.
         User user = userMapper.toUser(request);
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // Mặc định gán vai trò USER cho người dùng mới
+        HashSet<String> roles = new HashSet<>();
+        roles.add(Role.USER.toString());
+        user.setRoles(roles);
 
         return userMapper.toUserResponse(userRepository.save(user));
     }
