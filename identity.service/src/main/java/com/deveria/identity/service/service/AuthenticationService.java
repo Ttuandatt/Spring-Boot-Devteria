@@ -5,6 +5,7 @@ import com.deveria.identity.service.dto.request.AuthenticationRequest;
 import com.deveria.identity.service.dto.request.IntrospectRequest;
 import com.deveria.identity.service.dto.response.AuthenticationResponse;
 import com.deveria.identity.service.dto.response.IntrospectResponse;
+import com.deveria.identity.service.entity.User;
 import com.deveria.identity.service.exception.AppException;
 import com.deveria.identity.service.exception.ErrorCode;
 import com.deveria.identity.service.repository.UserRepository;
@@ -26,6 +27,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.StringJoiner;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +53,7 @@ public class AuthenticationService {
         }
 
         // Tạo token JWT
-        var token = generateToken(request.getUsername());
+        var token = generateToken(user);
         // Trả về token trong response
         return AuthenticationResponse.builder()
                 .token(token)
@@ -60,19 +62,19 @@ public class AuthenticationService {
 
     }
 
-    public String generateToken(String username){
+    public String generateToken(User user){
         // Tạo header với thuật toán HS256
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
 
         // Tạo payload với các thông tin cần thiết
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(username)  // Thông tin về người dùng
+                .subject(user.getUsername())  // Thông tin về người dùng
                 .issuer("danielpc.com") // Thông tin về nhà phát hành token
                 .issueTime(new Date()) // Thời gian phát hành token
                 .expirationTime(new Date(   // Thời gian hết hạn token
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
                 ))
-                .claim("customClaim", "custom") // Thông tin tùy chỉnh
+                .claim("scope", buildScope(user))   // Thông tin về phạm vi (scope) của token. Cho biết quyền hạn (roles) của user đang sở hữu token này.
                 .build();
         // Tạo payload từ JWTClaimsSet
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
@@ -106,5 +108,11 @@ public class AuthenticationService {
         return IntrospectResponse.builder()
                 .valid(verified && expiryTime.after(new Date()))
                 .build();
+    }
+
+    public String buildScope(User user){
+        StringJoiner stringJoiner = new StringJoiner(" "); // Vì theo chuẩn OAuth2, các scope của 1 user được phân tách bằng dấu cách
+        user.getRoles().forEach(stringJoiner::add); // Thêm từng role vào chuỗi scope
+        return stringJoiner.toString();
     }
 }

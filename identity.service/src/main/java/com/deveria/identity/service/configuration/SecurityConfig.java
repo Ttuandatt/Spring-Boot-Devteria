@@ -33,6 +33,7 @@ public class SecurityConfig {
         // Cấu hình cho phép truy cập công khai đến các endpoint nhất định
         httpSecurity.authorizeHttpRequests(request ->
                         request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/users").hasAuthority("SCOPE_ADMIN") // Chỉ cho phép user với vai trò ADMIN truy cập /users
                         .anyRequest()
                         .authenticated()
                 );

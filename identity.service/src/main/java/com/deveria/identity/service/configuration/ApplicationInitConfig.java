@@ -24,6 +24,8 @@ public class ApplicationInitConfig {
 
     PasswordEncoder passwordEncoder;
 
+    // Method này sẽ chạy khi ứng dụng khởi động
+    // Có tác dụng kiểm tra nếu chưa có user "admin" thì tạo mới user này với password "admin"
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository) {
         return args -> {
