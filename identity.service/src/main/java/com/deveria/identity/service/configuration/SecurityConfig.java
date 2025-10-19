@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,6 +21,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     // Các endpoint công khai không yêu cầu xác thực
@@ -33,7 +35,7 @@ public class SecurityConfig {
         // Cấu hình cho phép truy cập công khai đến các endpoint nhất định
         httpSecurity.authorizeHttpRequests(request ->
                         request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-                                .requestMatchers(HttpMethod.GET, "/users").hasAuthority("SCOPE_ADMIN") // Chỉ cho phép user với vai trò ADMIN truy cập /users
+//                                .requestMatchers(HttpMethod.GET, "/users").hasAuthority("SCOPE_ADMIN") // Chỉ cho phép user với vai trò ADMIN truy cập /users
                         .anyRequest()
                         .authenticated()
                 );

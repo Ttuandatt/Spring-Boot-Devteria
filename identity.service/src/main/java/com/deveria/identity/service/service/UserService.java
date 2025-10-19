@@ -14,6 +14,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -49,16 +53,22 @@ public class UserService {
     }
 
     // Lấy danh sách tất cả người dùng
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')") // Chỉ cho phép truy cập nếu người dùng có vai trò ADMIN. Sẽ kiểm tra trước khi thực thi method này, nếu không đủ quyền sẽ ném lỗi 403 Forbidden ngay trước khi vào method này.
+    // Trong video số 12. thì Devteria dùng là @PreAuthorize("hasRole('ADMIN')") do video trước đó ảnh có customize cái prefix "ROLE_" nên mới dùng hasRole('ADMIN'), còn ở đây mình dùng mặc định của Spring Security nên phải dùng hasAuthority('SCOPE_ADMIN')
     public List<UserResponse> getUsers() {
         LogUtils.logMethodInfo("Fetching all users");
         return userRepository.findAll().stream().map(userMapper::toUserResponse).collect(Collectors.toList()); // Sử dụng method reference để chuyển đổi từng User sang UserResponse
     }
 
     // Lấy thông tin người dùng theo ID
+//    @PostAuthorize("hasAuthority('SCOPE_ADMIN')") // Chỉ cho phép truy cập nếu người dùng có vai trò ADMIN. Sẽ kiểm tra sau khi thực thi method này, nếu không đủ quyền sẽ ném lỗi 403 Forbidden ngay sau khi vào method này.
+    @PostAuthorize("returnObject.username == authentication.name")  // Chỉ cho phép truy cập nếu username trong UserResponse trùng với tên người dùng đã xác thực. Sẽ kiểm tra sau khi thực thi method này, nếu không đủ quyền sẽ ném lỗi 403 Forbidden ngay sau khi vào method này.
     public UserResponse getUser(String userId) {
         // findById() trả về Optional<User>
         // → orElseThrow() dùng để "mở" Optional, trả về đối tượng User nếu có,
         // hoặc ném ra RuntimeException nếu không tìm thấy người dùng.
+        LogUtils.logMethodInfo("Fetching user with id: " + userId);
+
         return userMapper.toUserResponse(userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found")));
     }
@@ -81,6 +91,15 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         userRepository.delete(user);
+    }
+
+    public UserResponse getMyInfo(){
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        User user = userRepository.findByUsername(name).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+
+        return userMapper.toUserResponse(user); // Trả về thông tin người dùng đã được chuyển đổi sang UserResponse
     }
 
 }
