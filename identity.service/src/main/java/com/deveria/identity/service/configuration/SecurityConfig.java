@@ -1,5 +1,6 @@
 package com.deveria.identity.service.configuration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
@@ -26,6 +29,8 @@ public class SecurityConfig {
 
     // Các endpoint công khai không yêu cầu xác thực
     private final String[] PUBLIC_ENDPOINTS = {"/users", "/auth/token", "/auth/introspect"};
+
+
 
     @Value("${jwt.signer.key}") // Lấy giá trị từ file cấu hình application.properties
     private String signerKey;
@@ -46,6 +51,8 @@ public class SecurityConfig {
         // Ví dụ: ta không cho /users công khai, thì muốn access được ta phải gửi kèm token JWT trong header Authorization.
         httpSecurity.oauth2ResourceServer(oauth2 ->
                 oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder()))
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint()) // Cấu hình điểm vào xác thực (authentication entry point) để xử lý các yêu cầu không xác thực. Ví dụ với lỗi Error 401 thì nó được xử lý ở phần filter trước khi vào đến GlobalExceptionHandler, nên cần làm cái này để GlobalExceptionHandler bắt được lỗi 401. Và method này yêu cầu phải imlement AuthenticationEntryPoint nên ta tạo 1 class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint.
+                // oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder()).jwtAuthenticationConverter(jwtAuthenticationConverter())) nếu muốn custom mapping authorities
         );
 
 
@@ -53,6 +60,23 @@ public class SecurityConfig {
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
         return httpSecurity.build();
     }
+
+    // Cấu hình để ánh xạ các quyền (authorities) từ token JWT.
+    // Mặc định, Spring Security không tự động ánh xạ các quyền từ token JWT,
+    // nên ta cần cấu hình để nó hiểu các quyền này.
+    // Trong ví dụ này, ta cấu hình để các quyền trong token JWT được ánh xạ thành các vai trò (roles) trong Spring Security.
+    // Cụ thể, ta thêm tiền tố "ROLE_" vào trước mỗi quyền để Spring Security nhận diện chúng như các vai trò.
+    // Mặc định các quyền có tiền tố là "SCOPE_", nên nếu token JWT có quyền "SCOPE_ADMIN",
+    // thì sau khi ánh xạ sẽ thành "ROLE_ADMIN", và ta có thể sử dụng "hasRole("ADMIN")" trong cấu hình bảo mật.
+//    @Bean
+//    JwtAuthenticationConverter jwtAuthenticationConverter() {
+//        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+//        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+//
+//        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+//        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+//        return jwtAuthenticationConverter;
+//    }
 
     @Bean
     JwtDecoder jwtDecoder(){

@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.security.access.AccessDeniedException;
+
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -29,7 +31,9 @@ public class GlobalExceptionHandler {
         response.setCode(errorCode.getCode());
         response.setMessage(errorCode.getMessage());
 
-        return ResponseEntity.badRequest().body(response);
+        return ResponseEntity
+                .status(errorCode.getStatusCode())
+                .body(response);
     }
 
     // Bắt lỗi validate dữ liệu đầu vào và trả về mã lỗi 400 (Bad Request)
@@ -49,6 +53,19 @@ public class GlobalExceptionHandler {
         response.setMessage(errorCode.getMessage());
 
         return ResponseEntity.badRequest().body(response);
+    }
+
+    // Bắt lỗi AccessDeniedException và trả về mã lỗi 403 (Forbidden)
+    @ExceptionHandler(value = AccessDeniedException.class)
+    ResponseEntity<ApiResponse> handleAccessDeniedException(AccessDeniedException e){
+        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+
+        return ResponseEntity.status(errorCode.getStatusCode()).body(
+                ApiResponse.builder()
+                        .code(errorCode.getCode())
+                        .message(errorCode.getMessage())
+                        .build()
+        );
     }
 
 }
