@@ -1,5 +1,6 @@
 package com.deveria.identity.service.dto.request;
 
+import com.deveria.identity.service.validator.DobConstraint;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -18,6 +19,7 @@ public class UserCreateRequest {
     String password;
     String firstName;
     String lastName;
+    @DobConstraint(min=10, message = "INVALID_DOB")  // Custom annotation to validate date of birth
     LocalDate dob;
 
     // @Data generates getters, setters, toString, equals, and hashCode methods
