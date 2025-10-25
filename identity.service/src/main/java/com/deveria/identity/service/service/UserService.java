@@ -47,7 +47,7 @@ public class UserService {
         // Mặc định gán vai trò USER cho người dùng mới là USER
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.USER.toString());
-        user.setRoles(roles);
+//        user.setRoles(roles);
 
         return userMapper.toUserResponse(userRepository.save(user));
     }

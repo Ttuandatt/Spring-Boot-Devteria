@@ -112,7 +112,7 @@ public class AuthenticationService {
 
     public String buildScope(User user){
         StringJoiner stringJoiner = new StringJoiner(" "); // Vì theo chuẩn OAuth2, các scope của 1 user được phân tách bằng dấu cách
-        user.getRoles().forEach(stringJoiner::add); // Thêm từng role vào chuỗi scope
+//        user.getRoles().forEach(stringJoiner::add); // Thêm từng role vào chuỗi scope
         return stringJoiner.toString();
     }
 }
