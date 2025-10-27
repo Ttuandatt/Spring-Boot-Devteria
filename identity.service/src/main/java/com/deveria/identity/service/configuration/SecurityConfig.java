@@ -68,15 +68,15 @@ public class SecurityConfig {
     // Cụ thể, ta thêm tiền tố "ROLE_" vào trước mỗi quyền để Spring Security nhận diện chúng như các vai trò.
     // Mặc định các quyền có tiền tố là "SCOPE_", nên nếu token JWT có quyền "SCOPE_ADMIN",
     // thì sau khi ánh xạ sẽ thành "ROLE_ADMIN", và ta có thể sử dụng "hasRole("ADMIN")" trong cấu hình bảo mật.
-//    @Bean
-//    JwtAuthenticationConverter jwtAuthenticationConverter() {
-//        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-//        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
-//
-//        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-//        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
-//        return jwtAuthenticationConverter;
-//    }
+    @Bean
+    JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
+
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+        return jwtAuthenticationConverter;
+    }
 
     @Bean
     JwtDecoder jwtDecoder(){

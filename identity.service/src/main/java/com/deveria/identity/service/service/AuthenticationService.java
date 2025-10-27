@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -112,7 +113,14 @@ public class AuthenticationService {
 
     public String buildScope(User user){
         StringJoiner stringJoiner = new StringJoiner(" "); // Vì theo chuẩn OAuth2, các scope của 1 user được phân tách bằng dấu cách
-//        user.getRoles().forEach(stringJoiner::add); // Thêm từng role vào chuỗi scope
+        if(!CollectionUtils.isEmpty(user.getRoles())) { // Kiểm tra xem user có role không. Nếu role của user không rỗng
+            user.getRoles().forEach(role -> { // Duyệt qua từng role của user
+                stringJoiner.add("ROLE_" + role.getName()); // Thêm tên role vào chuỗi scope và thêm chuỗi "ROLE_" vào trước tên role để phân biệt role với permission
+                if(!CollectionUtils.isEmpty(role.getPermissions())) { // Kiểm tra xem role có permission không. Nếu permission của role không rỗng
+                    role.getPermissions().forEach(permission -> {stringJoiner.add(permission.getName());}); // Duyệt qua từng permission của role và thêm tên permission vào chuỗi scope
+                }
+            });
+        }
         return stringJoiner.toString();
     }
 }

@@ -8,6 +8,7 @@ import com.deveria.identity.service.enums.Role;
 import com.deveria.identity.service.exception.AppException;
 import com.deveria.identity.service.exception.ErrorCode;
 import com.deveria.identity.service.mapper.UserMapper;
+import com.deveria.identity.service.repository.RoleRepository;
 import com.deveria.identity.service.repository.UserRepository;
 import com.deveria.identity.service.util.LogUtils;
 import lombok.AccessLevel;
@@ -33,6 +34,7 @@ public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    RoleRepository roleRepository;
 
     // Tạo mới người dùng
     public UserResponse createUser(UserCreateRequest request) {
@@ -53,7 +55,8 @@ public class UserService {
     }
 
     // Lấy danh sách tất cả người dùng
-    @PreAuthorize("hasAuthority('SCOPE_ADMIN')") // Chỉ cho phép truy cập nếu người dùng có vai trò ADMIN. Sẽ kiểm tra trước khi thực thi method này, nếu không đủ quyền sẽ ném lỗi 403 Forbidden ngay trước khi vào method này.
+//    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // Chỉ cho phép truy cập nếu người dùng có vai trò ADMIN. Sẽ kiểm tra trước khi thực thi method này, nếu không đủ quyền sẽ ném lỗi 403 Forbidden ngay trước khi vào method này.
+    @PreAuthorize("hasAuthority('APPROVE_POST')") // Xét bằng permission thay vì role
     // Trong video số 12. thì Devteria dùng là @PreAuthorize("hasRole('ADMIN')") do video trước đó ảnh có customize cái prefix "ROLE_" nên mới dùng hasRole('ADMIN'), còn ở đây mình dùng mặc định của Spring Security nên phải dùng hasAuthority('SCOPE_ADMIN')
     public List<UserResponse> getUsers() {
         LogUtils.logMethodInfo("Fetching all users");
@@ -81,6 +84,11 @@ public class UserService {
 
         // Sử dụng UserMapper để cập nhật thông tin người dùng từ UserUpdateRequest
         userMapper.updateUser(user, request);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // Cập nhật vai trò người dùng
+        var roles = roleRepository.findAllById(request.getRoles());
+        user.setRoles(new HashSet<>(roles)); // Vì user.setRoles() nhận vào một Set, nên ta cần chuyển List sang Set
 
         return userMapper.toUserResponse(userRepository.save(user));
     }
