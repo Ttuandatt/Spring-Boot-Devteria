@@ -19,7 +19,7 @@ public class UserCreateRequest {
     String password;
     String firstName;
     String lastName;
-    @DobConstraint(min=10, message = "INVALID_DOB")  // Custom annotation to validate date of birth
+    @DobConstraint(min=2, message = "INVALID_DOB")  // Custom annotation to validate date of birth
     LocalDate dob;
 
     // @Data generates getters, setters, toString, equals, and hashCode methods
