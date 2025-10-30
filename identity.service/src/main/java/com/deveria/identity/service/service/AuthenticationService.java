@@ -3,11 +3,14 @@ package com.deveria.identity.service.service;
 import ch.qos.logback.classic.Logger;
 import com.deveria.identity.service.dto.request.AuthenticationRequest;
 import com.deveria.identity.service.dto.request.IntrospectRequest;
+import com.deveria.identity.service.dto.request.LogoutRequest;
 import com.deveria.identity.service.dto.response.AuthenticationResponse;
 import com.deveria.identity.service.dto.response.IntrospectResponse;
+import com.deveria.identity.service.entity.InvalidatedToken;
 import com.deveria.identity.service.entity.User;
 import com.deveria.identity.service.exception.AppException;
 import com.deveria.identity.service.exception.ErrorCode;
+import com.deveria.identity.service.repository.InvalidatedTokenRepository;
 import com.deveria.identity.service.repository.UserRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -29,12 +32,14 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService {
     UserRepository userRepository;
+    InvalidatedTokenRepository invalidatedTokenRepository;
 
     @NonFinal   // because it's not injected via constructor
     @Value("${jwt.signer.key}")
@@ -75,6 +80,7 @@ public class AuthenticationService {
                 .expirationTime(new Date(   // Thời gian hết hạn token
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
                 ))
+                .jwtID(UUID.randomUUID().toString()) // ID duy nhất cho token
                 .claim("scope", buildScope(user))   // Thông tin về phạm vi (scope) của token. Cho biết quyền hạn (roles) của user đang sở hữu token này.
                 .build();
         // Tạo payload từ JWTClaimsSet
@@ -97,17 +103,17 @@ public class AuthenticationService {
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
+        boolean isValid = true;
 
-        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+        try{
+            verifyToken(token);
+        }catch (AppException e){
+           isValid = false;
+        }
 
-        SignedJWT signedJWT = SignedJWT.parse(token);
-
-        Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-
-        var verified = signedJWT.verify(verifier);
 
         return IntrospectResponse.builder()
-                .valid(verified && expiryTime.after(new Date()))
+                .valid(isValid)
                 .build();
     }
 
@@ -122,5 +128,43 @@ public class AuthenticationService {
             });
         }
         return stringJoiner.toString();
+    }
+
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        var signToken = verifyToken(request.getToken());
+
+        String jti = signToken.getJWTClaimsSet().getJWTID();
+        Date expirationTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jti)
+                .expirationTime(expirationTime)
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
+    }
+
+    private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
+        // Tạo bộ xác thực JWS với khóa bí mật
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+
+        SignedJWT signedJWT = SignedJWT.parse(token);
+
+        Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        var verified = signedJWT.verify(verifier);
+
+
+        // Nếu token không hợp lệ hoặc đã hết hạn, ném ra ngoại lệ là user chưa được xác thực
+        if(!(verified || expiryTime.after(new Date())))
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+        // Nếu token đã bị thu hồi hoặc user giữ token này logout trước khi nó expire, ném ra ngoại lệ là user chưa được xác thực
+        if(invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+
+        return signedJWT;
     }
 }

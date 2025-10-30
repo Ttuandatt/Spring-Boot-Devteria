@@ -28,12 +28,10 @@ import javax.crypto.spec.SecretKeySpec;
 public class SecurityConfig {
 
     // Các endpoint công khai không yêu cầu xác thực
-    private final String[] PUBLIC_ENDPOINTS = {"/users", "/auth/token", "/auth/introspect"};
+    private final String[] PUBLIC_ENDPOINTS = {"/users", "/auth/token", "/auth/introspect", "/auth/logout"};
 
-
-
-    @Value("${jwt.signer.key}") // Lấy giá trị từ file cấu hình application.properties
-    private String signerKey;
+    @Autowired
+    private CustomJwtDecoder customJwtDecoder; // Sử dụng CustomJwtDecoder để giải mã và xác thực token JWT
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -50,7 +48,8 @@ public class SecurityConfig {
         // Để cấu hình này hoạt động, ta cần cung cấp một JwtDecoder để giải mã và xác thực token JWT.
         // Ví dụ: ta không cho /users công khai, thì muốn access được ta phải gửi kèm token JWT trong header Authorization.
         httpSecurity.oauth2ResourceServer(oauth2 ->
-                oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder()))
+                oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(customJwtDecoder)
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                         .authenticationEntryPoint(new JwtAuthenticationEntryPoint()) // Cấu hình điểm vào xác thực (authentication entry point) để xử lý các yêu cầu không xác thực. Ví dụ với lỗi Error 401 thì nó được xử lý ở phần filter trước khi vào đến GlobalExceptionHandler, nên cần làm cái này để GlobalExceptionHandler bắt được lỗi 401. Và method này yêu cầu phải imlement AuthenticationEntryPoint nên ta tạo 1 class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint.
                 // oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder()).jwtAuthenticationConverter(jwtAuthenticationConverter())) nếu muốn custom mapping authorities
         );
@@ -78,15 +77,6 @@ public class SecurityConfig {
         return jwtAuthenticationConverter;
     }
 
-    @Bean
-    JwtDecoder jwtDecoder(){
-        SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HS256");
-
-        return NimbusJwtDecoder
-                .withSecretKey(secretKeySpec)
-                .macAlgorithm(MacAlgorithm.HS256)
-                .build();
-    }
 
     @Bean
     PasswordEncoder passwordEncoder(){
