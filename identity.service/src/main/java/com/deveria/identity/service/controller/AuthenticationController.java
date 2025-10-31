@@ -3,6 +3,7 @@ package com.deveria.identity.service.controller;
 import com.deveria.identity.service.dto.request.AuthenticationRequest;
 import com.deveria.identity.service.dto.request.IntrospectRequest;
 import com.deveria.identity.service.dto.request.LogoutRequest;
+import com.deveria.identity.service.dto.request.RefreshRequest;
 import com.deveria.identity.service.dto.response.ApiResponse;
 import com.deveria.identity.service.dto.response.AuthenticationResponse;
 import com.deveria.identity.service.dto.response.IntrospectResponse;
@@ -57,6 +58,15 @@ public class AuthenticationController {
     ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
         authenticationService.logout(request);
         return ApiResponse.<Void>builder().build();
+    }
+
+    @PostMapping("/refresh")
+    ApiResponse<AuthenticationResponse> refresh(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
+        var result = authenticationService.refreshToken(request);
+
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
+                .build();
     }
 
 }

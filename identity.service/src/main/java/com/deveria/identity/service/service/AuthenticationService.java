@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Logger;
 import com.deveria.identity.service.dto.request.AuthenticationRequest;
 import com.deveria.identity.service.dto.request.IntrospectRequest;
 import com.deveria.identity.service.dto.request.LogoutRequest;
+import com.deveria.identity.service.dto.request.RefreshRequest;
 import com.deveria.identity.service.dto.response.AuthenticationResponse;
 import com.deveria.identity.service.dto.response.IntrospectResponse;
 import com.deveria.identity.service.entity.InvalidatedToken;
@@ -144,6 +145,7 @@ public class AuthenticationService {
         invalidatedTokenRepository.save(invalidatedToken);
     }
 
+    // Hàm xác thực token
     private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
         // Tạo bộ xác thực JWS với khóa bí mật
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
@@ -166,5 +168,35 @@ public class AuthenticationService {
 
 
         return signedJWT;
+    }
+
+    // Hàm làm mới token
+    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
+        // Xác thực token hiện tại xem còn hợp lệ không
+        var signedJWT = verifyToken(request.getToken());
+
+        // Lấy thông tin token hiện tại
+        var jti = signedJWT.getJWTClaimsSet().getJWTID();
+        var expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        // Invalidate (thu hồi) token hiện tại bằng cách lưu jti của nó vào bảng invalidated_tokens
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jti)
+                .expirationTime(expirationTime)
+                .build();
+        invalidatedTokenRepository.save(invalidatedToken);
+
+        // Lấy username từ token hiện tại
+        var username = signedJWT.getJWTClaimsSet().getSubject();
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+
+        // Tạo token mới
+        var newToken = generateToken(user);
+        return AuthenticationResponse.builder()
+                .token(newToken)
+                .authenticated(true)
+                .build();
+
+
     }
 }
