@@ -13,6 +13,7 @@ import com.deveria.identity.service.exception.AppException;
 import com.deveria.identity.service.exception.ErrorCode;
 import com.deveria.identity.service.repository.InvalidatedTokenRepository;
 import com.deveria.identity.service.repository.UserRepository;
+import com.deveria.identity.service.util.LogUtils;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -45,6 +46,14 @@ public class AuthenticationService {
     @NonFinal   // because it's not injected via constructor
     @Value("${jwt.signer.key}")
     protected String SIGNER_KEY;
+
+    @NonFinal   // because it's not injected via constructor
+    @Value("${jwt.valid-duration}")
+    protected long VALID_DURATION;
+
+    @NonFinal   // because it's not injected via constructor
+    @Value("${jwt.refreshable-duration}")
+    protected long REFRESHABLE_DURATION;
 
     public AuthenticationResponse authenticate(AuthenticationRequest request){
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
@@ -79,7 +88,7 @@ public class AuthenticationService {
                 .issuer("danielpc.com") // Thông tin về nhà phát hành token
                 .issueTime(new Date()) // Thời gian phát hành token
                 .expirationTime(new Date(   // Thời gian hết hạn token
-                        Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
+                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()
                 ))
                 .jwtID(UUID.randomUUID().toString()) // ID duy nhất cho token
                 .claim("scope", buildScope(user))   // Thông tin về phạm vi (scope) của token. Cho biết quyền hạn (roles) của user đang sở hữu token này.
@@ -107,7 +116,7 @@ public class AuthenticationService {
         boolean isValid = true;
 
         try{
-            verifyToken(token);
+            verifyToken(token, false);
         }catch (AppException e){
            isValid = false;
         }
@@ -132,33 +141,40 @@ public class AuthenticationService {
     }
 
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
-        var signToken = verifyToken(request.getToken());
+        try{
+            var signedToken = verifyToken(request.getToken(), true);
 
-        String jti = signToken.getJWTClaimsSet().getJWTID();
-        Date expirationTime = signToken.getJWTClaimsSet().getExpirationTime();
+            String jti = signedToken.getJWTClaimsSet().getJWTID();
+            Date expirationTime = signedToken.getJWTClaimsSet().getExpirationTime();
 
-        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-                .id(jti)
-                .expirationTime(expirationTime)
-                .build();
+            InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                    .id(jti)
+                    .expirationTime(expirationTime)
+                    .build();
 
-        invalidatedTokenRepository.save(invalidatedToken);
+            invalidatedTokenRepository.save(invalidatedToken);
+        }catch (AppException e){
+            LogUtils.logMethodInfo("Token already invalidated or expired.");
+        }
     }
 
     // Hàm xác thực token
-    private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws ParseException, JOSEException {
         // Tạo bộ xác thực JWS với khóa bí mật
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
         SignedJWT signedJWT = SignedJWT.parse(token);
 
-        Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        // Kiểm tra điều kiện hết hạn token
+        Date expiryTime = (isRefresh) // nếu là làm mới token
+                ? new Date (signedJWT.getJWTClaimsSet().getIssueTime().toInstant().plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).toEpochMilli()) // Thời gian hết hạn bằng thời gian phát hành + thời gian làm mới
+                : signedJWT.getJWTClaimsSet().getExpirationTime(); // Ngược lại, thời gian hết hạn bằng thời gian hết hạn trong token
 
         var verified = signedJWT.verify(verifier);
 
 
         // Nếu token không hợp lệ hoặc đã hết hạn, ném ra ngoại lệ là user chưa được xác thực
-        if(!(verified || expiryTime.after(new Date())))
+        if(!(verified && expiryTime.after(new Date())))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
         // Nếu token đã bị thu hồi hoặc user giữ token này logout trước khi nó expire, ném ra ngoại lệ là user chưa được xác thực
@@ -173,7 +189,7 @@ public class AuthenticationService {
     // Hàm làm mới token
     public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
         // Xác thực token hiện tại xem còn hợp lệ không
-        var signedJWT = verifyToken(request.getToken());
+        var signedJWT = verifyToken(request.getToken(), true);
 
         // Lấy thông tin token hiện tại
         var jti = signedJWT.getJWTClaimsSet().getJWTID();
