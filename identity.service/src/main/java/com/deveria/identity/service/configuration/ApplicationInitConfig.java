@@ -3,13 +3,16 @@ package com.deveria.identity.service.configuration;
 import com.deveria.identity.service.entity.User;
 import com.deveria.identity.service.enums.Role;
 import com.deveria.identity.service.repository.UserRepository;
+import com.deveria.identity.service.util.LogUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,7 +30,9 @@ public class ApplicationInitConfig {
     // Method này sẽ chạy khi ứng dụng khởi động
     // Có tác dụng kiểm tra nếu chưa có user "admin" thì tạo mới user này với password "admin"
     @Bean
+    @ConditionalOnProperty(prefix = "spring", value = "datasource.driverClassName", havingValue = "com.mysql.cj.jdbc.Driver")
     ApplicationRunner applicationRunner(UserRepository userRepository) {
+        LogUtils.logMethodInfo("Hellooooo. Init application.....");
         return args -> {
             if(!userRepository.findByUsername("admin").isPresent()){
                 var roles = new HashSet<String>();
