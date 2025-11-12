@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LogUtils {
 
-    public static void logMethodInfo(String message){
+    public static void logMethodInfo(String message) {
         // Lấy stack trace hiện tại
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
 

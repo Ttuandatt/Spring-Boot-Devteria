@@ -1,11 +1,13 @@
 package com.deveria.identity.service.dto.request;
 
-import com.deveria.identity.service.validator.DobConstraint;
+import java.time.LocalDate;
+
 import jakarta.validation.constraints.Size;
+
+import com.deveria.identity.service.validator.DobConstraint;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.LocalDate;
 
 @Data
 @Builder
@@ -15,11 +17,14 @@ import java.time.LocalDate;
 public class UserCreateRequest {
     @Size(min = 3, max = 20, message = "INVALID_USERNAME")
     String username;
-    @Size(min = 5,  message = "INVALID_PASSWORD")
+
+    @Size(min = 5, message = "INVALID_PASSWORD")
     String password;
+
     String firstName;
     String lastName;
-    @DobConstraint(min=2, message = "INVALID_DOB")  // Custom annotation to validate date of birth
+
+    @DobConstraint(min = 2, message = "INVALID_DOB") // Custom annotation to validate date of birth
     LocalDate dob;
 
     // @Data generates getters, setters, toString, equals, and hashCode methods

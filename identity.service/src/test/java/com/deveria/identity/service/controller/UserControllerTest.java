@@ -1,10 +1,7 @@
 package com.deveria.identity.service.controller;
 
-import com.deveria.identity.service.dto.request.UserCreateRequest;
-import com.deveria.identity.service.dto.response.UserResponse;
-import com.deveria.identity.service.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
@@ -19,7 +16,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import java.time.LocalDate;
+import com.deveria.identity.service.dto.request.UserCreateRequest;
+import com.deveria.identity.service.dto.response.UserResponse;
+import com.deveria.identity.service.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -31,7 +32,6 @@ class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
-
 
     private UserCreateRequest request;
     private UserResponse response;
@@ -64,12 +64,10 @@ class UserControllerTest {
         objectMapper.registerModule(new JavaTimeModule());
         String content = objectMapper.writeValueAsString(request);
 
-        Mockito.when(userService.createUser(ArgumentMatchers.any()))
-                .thenReturn(response);
+        Mockito.when(userService.createUser(ArgumentMatchers.any())).thenReturn(response);
 
         // WHEN - THEN
-        mockMvc.perform(MockMvcRequestBuilders
-                        .post("/users")
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -85,16 +83,15 @@ class UserControllerTest {
         objectMapper.registerModule(new JavaTimeModule());
         String content = objectMapper.writeValueAsString(request);
 
-        Mockito.when(userService.createUser(ArgumentMatchers.any()))
-                .thenReturn(response);
+        Mockito.when(userService.createUser(ArgumentMatchers.any())).thenReturn(response);
 
         // WHEN - THEN
-        mockMvc.perform(MockMvcRequestBuilders
-                        .post("/users")
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("code").value(1003))
-                .andExpect(MockMvcResultMatchers.jsonPath("message").value("Username must be between 3 and 20 characters"));
+                .andExpect(MockMvcResultMatchers.jsonPath("message")
+                        .value("Username must be between 3 and 20 characters"));
     }
 }

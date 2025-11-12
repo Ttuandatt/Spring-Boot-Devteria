@@ -1,19 +1,20 @@
 package com.deveria.identity.service.service;
 
+import java.util.HashSet;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.deveria.identity.service.dto.request.RoleRequest;
 import com.deveria.identity.service.dto.response.RoleResponse;
-import com.deveria.identity.service.entity.Role;
 import com.deveria.identity.service.mapper.RoleMapper;
 import com.deveria.identity.service.repository.PermissionRepository;
 import com.deveria.identity.service.repository.RoleRepository;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.util.HashSet;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +25,7 @@ public class RoleService {
     RoleMapper roleMapper;
     PermissionRepository permissionRepository;
 
-    public RoleResponse create(RoleRequest request){
+    public RoleResponse create(RoleRequest request) {
         var role = roleMapper.toRole(request);
 
         var permissions = permissionRepository.findAllById(request.getPermissions());
@@ -34,8 +35,8 @@ public class RoleService {
         return roleMapper.toRoleResponse(role);
     }
 
-    public List<RoleResponse> getAll(){
-        var roles =  roleRepository.findAll();
+    public List<RoleResponse> getAll() {
+        var roles = roleRepository.findAll();
 
         return roles.stream().map(roleMapper::toRoleResponse).toList();
     }
@@ -43,6 +44,4 @@ public class RoleService {
     public void delete(String roleName) {
         roleRepository.deleteById(roleName);
     }
-
-
 }

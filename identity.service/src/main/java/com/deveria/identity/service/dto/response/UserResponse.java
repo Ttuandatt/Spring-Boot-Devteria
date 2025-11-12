@@ -1,11 +1,10 @@
 package com.deveria.identity.service.dto.response;
 
-import com.deveria.identity.service.entity.Role;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
 import java.time.LocalDate;
 import java.util.Set;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
@@ -17,6 +16,6 @@ public class UserResponse {
     String username;
     String firstName;
     String lastName;
-    LocalDate dob; //yyyy-mm-dd
+    LocalDate dob; // yyyy-mm-dd
     Set<RoleResponse> roles;
 }

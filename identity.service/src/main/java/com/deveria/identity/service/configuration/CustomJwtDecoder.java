@@ -1,10 +1,9 @@
 package com.deveria.identity.service.configuration;
 
-import com.deveria.identity.service.dto.request.IntrospectRequest;
-import com.deveria.identity.service.service.AuthenticationService;
-import com.nimbusds.jose.JOSEException;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
+import java.text.ParseException;
+import java.util.Objects;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -14,10 +13,9 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.text.ParseException;
-import java.util.Objects;
+import com.deveria.identity.service.dto.request.IntrospectRequest;
+import com.deveria.identity.service.service.AuthenticationService;
+import com.nimbusds.jose.JOSEException;
 
 @Component
 public class CustomJwtDecoder implements JwtDecoder {
@@ -29,26 +27,24 @@ public class CustomJwtDecoder implements JwtDecoder {
 
     private NimbusJwtDecoder nimbusJwtDecoder = null;
 
-
     // This method is called to decode and validate a JWT token.
     @Override
     public Jwt decode(String token) throws JwtException {
-        try{ // test if token is still valid
+        try { // test if token is still valid
             var response = authenticationService.introspect(
-                    IntrospectRequest.builder()
-                            .token(token)
-                            .build());
+                    IntrospectRequest.builder().token(token).build());
 
-            if(!response.isValid()){
+            if (!response.isValid()) {
                 throw new JwtException("Invalid token");
             }
-        }catch(JOSEException | ParseException e){   // token không hợp lệ
+        } catch (JOSEException | ParseException e) { // token không hợp lệ
             throw new JwtException(e.getMessage());
         }
 
         // lazy init
-        if(Objects.isNull(nimbusJwtDecoder)){
-            SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HmacSHA256"); // Create SecretKeySpec from signerKey
+        if (Objects.isNull(nimbusJwtDecoder)) {
+            SecretKeySpec secretKeySpec =
+                    new SecretKeySpec(signerKey.getBytes(), "HmacSHA256"); // Create SecretKeySpec from signerKey
             nimbusJwtDecoder = NimbusJwtDecoder.withSecretKey(secretKeySpec)
                     .macAlgorithm(MacAlgorithm.HS256)
                     .build();

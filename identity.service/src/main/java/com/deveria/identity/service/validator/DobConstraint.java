@@ -1,13 +1,14 @@
 package com.deveria.identity.service.validator;
 
+import java.lang.annotation.*;
+import java.lang.annotation.Retention;
+
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.*;
-
-//@Target({ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.CONSTRUCTOR, ElementType.PARAMETER, ElementType.TYPE_USE}) // Xác định phạm vi mà annotation này có thể áp dụng
-@Target({ElementType.FIELD})    // Trong trường hợp này, chỉ áp dụng cho các trường (fields)
+// @Target({ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.CONSTRUCTOR,
+// ElementType.PARAMETER, ElementType.TYPE_USE}) // Xác định phạm vi mà annotation này có thể áp dụng
+@Target({ElementType.FIELD}) // Trong trường hợp này, chỉ áp dụng cho các trường (fields)
 @Retention(RetentionPolicy.RUNTIME) // Xác định thời gian tồn tại của annotation này (tại runtime)
 @Constraint(validatedBy = {DobValidator.class}) // Chỉ định các lớp validator sẽ xử lý logic kiểm tra
 public @interface DobConstraint {
