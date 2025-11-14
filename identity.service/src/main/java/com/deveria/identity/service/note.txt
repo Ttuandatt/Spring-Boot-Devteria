@@ -1,0 +1,29 @@
+14/11/2025:
+#23 code ngày càng chuyên nghiệp hơn với SonarLint và SonarQube
+
+SonarQube
+Là một server / nền tảng quản lý chất lượng code.
+Nhiệm vụ chính:
+- Phân tích code static (Static Code Analysis) để tìm bug, code smell, vulnerability.
+- Đưa ra các báo cáo chất lượng code, bao gồm: độ phức tạp, trùng lặp code, coverage test, security issues…
+- Có thể tích hợp với CI/CD để bắt buộc chất lượng code trước khi deploy.
+
+SonarLint (SonarQube for IDE)
+Là một plugin IDE (IntelliJ IDEA, Eclipse, VSCode) kiểm tra code ngay khi viết.
+Hoạt động như 'SonarQube version cục bộ': highlight code smell, bug, vulnerability trực tiếp trên editor.
+Có thể kết nối với SonarQube server để áp dụng cùng rules cho team.
+Ưu điểm trong Spring Boot:
+- Code Spring Boot bạn viết sẽ được SonarLint highlight vấn đề ngay lập tức, ví dụ:
+- Null pointer nguy cơ
+- Biến không dùng
+- Security issue trong SQL query / XSS / JWT handling
+- Giúp sửa lỗi trước khi commit, giảm bug production.
+
+Cách tải SonarQube:
+- Truy cập Docker Hub
+- Search Sonar Qube -> Tìm thằng chính thức: Docker Official Image
+- Chọn tab Tags, tìm version community -> Copy lệnh pull docker: docker pull sonarqube:community
+- Mở command promt dán câu lệnh vào (lưu ý docker phải chạy sẵn) để pull
+- Sau khi pull thành công thì start: docker run --name sonar-qube -p 9000:9000 -d sonarqube:community
+- Các lần sau đó để start thì chạy lệnh: docker start sonar-qube
+
