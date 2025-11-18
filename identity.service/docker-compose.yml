@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.1
+    container_name: identity-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: identity_service
+      MYSQL_USER: identity_user
+      MYSQL_PASSWORD: identity_pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "identity_user", "-pidentity_pass"]
+      interval: 10s
+      retries: 5
+
+  app:
+    image: identity-service:latest
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DBMS_CONNECTION: jdbc:mysql://db:3306/identity_service
+      DBMS_USERNAME: identity_user
+      DBMS_PASSWORD: identity_pass
+    ports:
+      - "9090:8080"
+    restart: always
+
+volumes:
+  db_data:
