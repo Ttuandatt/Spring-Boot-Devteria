@@ -1,5 +1,4 @@
 # Identity Service - Docker Setup
-
 Hướng dẫn build và chạy project Spring Boot với MySQL sử dụng Docker và Docker Compose.
 
 ---
@@ -60,3 +59,44 @@ docker compose down
 - docker ps                       # Kiểm tra trạng thái container
 - Truy cập ứng dụng ở http://localhost:9090/identity
 - docker-compose down             # Dừng container khi cần
+
+
+
+---
+
+Hướng dẫn publish Docker Image lên Docker Hub.
+
+## **1. Đăng nhập Docker Hub**
+```bash
+docker login
+```
+## **2. Kiểm tra danh sách image đang có**
+```bash
+docker images
+```
+
+## **3. Tag Docker Image**
+```bash
+docker tag <local-image>:<tag> <dockerhub-username>/<repo-name>:<tag>
+```
+Ví dụ: docker tag identity-service:latest tuandatdev/identity-service:latest
+
+
+## **4. Push Docker Image lên Docker Hub**
+```bash
+docker push <dockerhub-username>/<repo-name>:<tag>
+```
+Ví dụ: docker push tuandatdev/identity-service:latest  
+
+## **5. Kiểm tra trên Docker Hub**
+Truy cập trang Docker Hub của bạn để xác nhận image đã được upload thành công.
+
+https://hub.docker.com/repositories
+
+---
+## **Tóm tắt lệnh publish Docker Image**
+- docker login                                           # Đăng nhập Docker Hub
+- docker images                                          # Kiểm tra danh sách image
+- docker tag <local-image>:<tag> <dockerhub-username>/<repo-name>:<tag>   # Tag image
+- docker push <dockerhub-username>/<repo-name>:<tag>          # Push image lên Docker Hub
+- Kiểm tra trên trang Docker Hub của bạn: https://hub.docker.com/repositories
