@@ -1,4 +1,5 @@
 # Identity Service - Docker Setup
+
 Hướng dẫn build và chạy project Spring Boot với MySQL sử dụng Docker và Docker Compose.
 
 ---
@@ -42,11 +43,47 @@ http://localhost:9090/identity
 ```
 - 9090 là port host, 8080 là port container Spring Boot.
 
-## **7. Dừng Docker Compose**
+
+##**7. Import data từ MySQL Workbench vào MySQL Docker Image**
+**7.1. Export data từ MySQL Workbench**
+Trong MySQL Workbench:
+- Vào: Server → Data Export
+- Chọn database bạn đang dùng cho identity service
+- Tick:
+  ✅ Export to Self-Contained File
+- Chọn path, ví dụ: C:\backup\identity_db.sql
+- Nhấn Start Export
+
+**7.2. Import data vào MySQL Docker Image**
+Copy file SQL vào container rồi import
+Bước 1: Copy file vào container MySQL
+```
+docker cp "D:\IT\Spring-Boot-Devteria\identity-service20251122.sql" identity-mysql:/identity.sql
+```
+
+Bước 2: Truy cập container MySQL
+```
+docker exec -it identity-mysql bash
+```
+
+Bước 3: Truy cập MySQL
+```
+mysql -u root -proot123
+```
+sau đó
+```
+USE identity_service;
+SHOW TABLES;
+```
+Nếu thấy danh sách các bảng thì 100% đã OK.
+
+
+## **8. Dừng Docker Compose**
 Dừng và xóa các container:
 ```bash
 docker compose down
 ```
+
 
 ---
 
@@ -79,14 +116,14 @@ docker images
 ```bash
 docker tag <local-image>:<tag> <dockerhub-username>/<repo-name>:<tag>
 ```
-Ví dụ: docker tag identity-service:latest tuandatdev/identity-service:latest
+Ví dụ: docker tag identity-service:latest dannyluvemily/identity-service:latest
 
 
 ## **4. Push Docker Image lên Docker Hub**
 ```bash
 docker push <dockerhub-username>/<repo-name>:<tag>
 ```
-Ví dụ: docker push tuandatdev/identity-service:latest  
+Ví dụ: docker push dannyluvemily/identity-service:latest  
 
 ## **5. Kiểm tra trên Docker Hub**
 Truy cập trang Docker Hub của bạn để xác nhận image đã được upload thành công.

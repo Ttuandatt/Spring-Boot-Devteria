@@ -19,7 +19,7 @@ services:
       retries: 5
 
   app:
-    image: identity-service:latest
+    image: identity-service:0.0.1
     build: .
     depends_on:
       db:

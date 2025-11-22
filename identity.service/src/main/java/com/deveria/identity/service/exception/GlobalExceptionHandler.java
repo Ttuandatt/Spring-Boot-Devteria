@@ -52,7 +52,8 @@ public class GlobalExceptionHandler {
 
             var constraintViolation = e.getBindingResult()
                     .getAllErrors()
-                    .getFirst()
+//                    .getFirst(); // cái này của java 25
+                    .get(0) // cái này của java 17
                     .unwrap(ConstraintViolation.class); // Lấy ra ConstraintViolation từ lỗi
 
             attributes = constraintViolation
